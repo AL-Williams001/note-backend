@@ -35,6 +35,8 @@ const express = require("express");
 const app = express();
 const PORT = 3001;
 
+app.use(express.json());
+
 let notes = [
   {
     id: 1,
@@ -58,7 +60,32 @@ app.get("/", (request, response) => {
 });
 
 app.get("/api/notes", (request, response) => {
-  response.json(notes);
+  response.status(200).json(notes);
+});
+
+app.get("/api/notes/:id", (request, response) => {
+  const id = Number(request.params.id);
+  const note = notes.find((note) => note.id === id);
+
+  response.status(200).json(note);
+});
+
+app.delete("/api/notes/:id", (request, response) => {
+  const id = Number(request.params.id);
+  notes = notes.filter((note) => note.id !== id);
+
+  response.status(204).end();
+});
+
+app.post("/api/notes", (request, response) => {
+  const maxId = notes.length + 1;
+
+  const note = request.body;
+  note.id = maxId;
+
+  notes = notes.concat(note);
+
+  response.status(201).json(note);
 });
 
 app.listen(PORT, () => {
