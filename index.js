@@ -32,9 +32,11 @@
 // Express App:
 
 const express = require("express");
+const cors = require("cors");
 const app = express();
 const PORT = 3001;
 
+app.use(cors());
 app.use(express.json());
 
 let notes = [
@@ -55,28 +57,28 @@ let notes = [
   },
 ];
 
-let persons = [
-  {
-    id: 1,
-    name: "Arto Hellas",
-    number: "040-123456",
-  },
-  {
-    id: 2,
-    name: "Ada Lovelace",
-    number: "39-44-5323523",
-  },
-  {
-    id: 3,
-    name: "Dan Abramov",
-    number: "12-43-234345",
-  },
-  {
-    id: 4,
-    name: "mary Poppendieck",
-    number: "39-23-6423122",
-  },
-];
+// let persons = [
+//   {
+//     id: 1,
+//     name: "Arto Hellas",
+//     number: "040-123456",
+//   },
+//   {
+//     id: 2,
+//     name: "Ada Lovelace",
+//     number: "39-44-5323523",
+//   },
+//   {
+//     id: 3,
+//     name: "Dan Abramov",
+//     number: "12-43-234345",
+//   },
+//   {
+//     id: 4,
+//     name: "mary Poppendieck",
+//     number: "39-23-6423122",
+//   },
+// ];
 
 function generateId(db) {
   const maxId = notes.length > 0 ? Math.max(...db.map((n) => n.id)) : 0;
@@ -126,54 +128,70 @@ app.post("/api/notes", (request, response) => {
   response.status(201).json(note);
 });
 
-app.get("/api/persons", (request, response) => {
-  response.status(200).json(persons);
-}),
-  app.get("/api/persons/:id", (request, response) => {
-    response
-      .status(200)
-      .json(persons.find((person) => person.id === Number(request.params.id)));
-  });
-
-app.delete("/api/persons/:id", (request, response) => {
+app.put("/api/notes/:id", (request, response) => {
   const id = Number(request.params.id);
-  persons = persons.filter((person) => person.id !== id);
+  const note = notes.find((note) => note.id === id);
+  const { content, important } = request.body;
 
-  response.status(204).end();
-});
-
-app.post("/api/persons", (request, response) => {
-  const { name, number } = request.body;
-
-  if (!name || !number) {
-    return response.status(400).json({
-      error: "name or number missing",
-    });
-  }
-
-  if (persons.find((person) => person.name === name)) {
-    return response.status(400).json({
-      error: "name must be unique",
-    });
-  }
-
-  const person = {
-    name,
-    number,
-    id: generateId(persons),
+  const updatedNote = {
+    ...note,
+    content,
+    important,
   };
 
-  persons = persons.concat(person);
-  response.status(201).json(person);
+  notes = notes.map((note) => (note.id === id ? updatedNote : note));
+
+  response.status(200).json(updatedNote);
 });
 
-app.get("/info", (request, response) => {
-  response.send(`<p>Phonebook has info for ${persons.length} people</p>
-    <p>${new Date()}</p>`);
-}),
-  app.get("/api/info/", (request, response) => {
-    response.status(200).json(persons);
-  });
+// app.get("/api/persons", (request, response) => {
+//   response.status(200).json(persons);
+// }),
+//   app.get("/api/persons/:id", (request, response) => {
+//     response
+//       .status(200)
+//       .json(persons.find((person) => person.id === Number(request.params.id)));
+//   });
+
+// app.delete("/api/persons/:id", (request, response) => {
+//   const id = Number(request.params.id);
+//   persons = persons.filter((person) => person.id !== id);
+
+//   response.status(204).end();
+// });
+
+// app.post("/api/persons", (request, response) => {
+//   const { name, number } = request.body;
+
+//   if (!name || !number) {
+//     return response.status(400).json({
+//       error: "name or number missing",
+//     });
+//   }
+
+//   if (persons.find((person) => person.name === name)) {
+//     return response.status(400).json({
+//       error: "name must be unique",
+//     });
+//   }
+
+//   const person = {
+//     name,
+//     number,
+//     id: generateId(persons),
+//   };
+
+//   persons = persons.concat(person);
+//   response.status(201).json(person);
+// });
+
+// app.get("/info", (request, response) => {
+//   response.send(`<p>Phonebook has info for ${persons.length} people</p>
+//     <p>${new Date()}</p>`);
+// }),
+//   app.get("/api/info/", (request, response) => {
+//     response.status(200).json(persons);
+//   });
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
